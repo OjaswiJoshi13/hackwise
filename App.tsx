@@ -19,19 +19,28 @@ export default function App() {
   const [language, setLanguage] = useState("hi");
   const [category, setCategory] = useState("general");
   const [refreshing, setRefreshing] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Theme configuration
+  const theme = {
+    background: darkMode ? "#121212" : "#f4f4f4",
+    cardBackground: darkMode ? "#1F1F1F" : "white",
+    text: darkMode ? "white" : "black",
+    secondaryText: darkMode ? "#A0A0A0" : "gray",
+    header: darkMode ? "#3700B3" : "#6200ee",
+  };
 
   useEffect(() => {
     const loadTheme = async () => {
       const savedTheme = await AsyncStorage.getItem("theme");
-      if (savedTheme === "dark") setIsDarkMode(true);
+      if (savedTheme === "dark") setDarkMode(true);
     };
     loadTheme();
   }, []);
 
   const toggleTheme = async () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
+    const newTheme = !darkMode;
+    setDarkMode(newTheme);
     await AsyncStorage.setItem("theme", newTheme ? "dark" : "light");
   };
 
@@ -102,18 +111,22 @@ export default function App() {
   };
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
-      <PaperProvider theme={isDarkMode ? DarkTheme : DefaultTheme}>
+    <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
+      <PaperProvider theme={darkMode ? DarkTheme : DefaultTheme}>
         <SafeAreaProvider>
-          <View style={{ flex: 1, backgroundColor: isDarkMode ? "#121212" : "#f4f4f4" }}>
+          <View style={{ flex: 1, backgroundColor: darkMode ? "#121212" : "#f4f4f4" }}>
             <Appbar.Header style={styles.header}>
-              <Appbar.Content title="Vernacular News" subtitle="Stay updated in your language" />
-              <Switch value={isDarkMode} onValueChange={toggleTheme} style={{ marginRight: 10 }} />
+            <Appbar.Content title="Bharat Next" subtitle="Stay updated in your language" titleStyle={{fontSize: 28 ,fontWeight: "bold" }} />
+            <Appbar.Action
+              icon={darkMode ? "weather-sunny" : "weather-night"}
+              onPress={() => setDarkMode(!darkMode)}
+              color="#06038D"
+            />
               <Button mode="contained" onPress={fetchNews} style={styles.refreshButton}>Refresh</Button>
             </Appbar.Header>
-            <View style={styles.pickerContainer}>
-              <Text style={styles.pickerLabel}>Select Language:</Text>
-              <Picker selectedValue={language} onValueChange={(itemValue) => setLanguage(itemValue)} style={styles.picker}>
+            <View style={[styles.pickerContainer, {backgroundColor: theme.cardBackground}]}>
+              <Text style={[styles.pickerLabel, { color: theme.text}]}>Select Language:</Text>
+              <Picker selectedValue={language} onValueChange={(itemValue) => setLanguage(itemValue)} style={[styles.picker, { color: theme.text }]} dropdownIconColor={theme.text}>
                 <Picker.Item label="English" value="en" />
                 <Picker.Item label="Hindi" value="hi" />
                 <Picker.Item label="Marathi" value="mr" />
@@ -143,9 +156,9 @@ export default function App() {
                 <Picker.Item label="Chinese" value="zh-CN" />
               </Picker>
             </View>
-            <View style={styles.pickerContainer}>
-              <Text style={styles.pickerLabel}>Select Category:</Text>
-              <Picker selectedValue={category} onValueChange={(itemValue) => setCategory(itemValue)} style={styles.picker}>
+            <View style={[styles.pickerContainer, { backgroundColor: theme.cardBackground }]}>
+          <Text style={[styles.pickerLabel, { color: theme.text }]}>Select Category:</Text>
+              <Picker selectedValue={category} onValueChange={(itemValue) => setCategory(itemValue)} style={[styles.picker, { color: theme.text }]} dropdownIconColor={theme.text}>
                 <Picker.Item label="General" value="general" />
                 <Picker.Item label="Business" value="business" />
                 <Picker.Item label="Entertainment" value="entertainment" />
@@ -161,15 +174,15 @@ export default function App() {
               <FlatList
                 data={news}
                 keyExtractor={(item, index) => index.toString()}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchNews} />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchNews} colors={[theme.header]} tintColor={theme.header} />}
                 renderItem={({ item }) => (
                   <TouchableOpacity onPress={() => Linking.openURL(item.url)}>
-                    <Card style={[styles.newsCard, { backgroundColor: isDarkMode ? "#333" : "white" }]}>
+                    <Card style={[styles.newsCard, { backgroundColor: theme.cardBackground }]}>
                       <Card.Cover source={{ uri: item.urlToImage || "https://via.placeholder.com/150" }} style={styles.newsImage} />
                       <Card.Content>
-                        <Text style={[styles.newsTitle, { color: isDarkMode ? "#fff" : "#000" }]}>{item.title}</Text>
-                        <Text style={styles.newsSource}>{item.source?.name || "Unknown Source"}</Text>
-                        <Text style={styles.newsDescription}>{item.description}</Text>
+                        <Text style={[styles.newsTitle, { color: theme.text }]}>{item.title}</Text>
+                        <Text style={[styles.newsSource, { color: theme.secondaryText }]}> {item.source?.name || "Unknown Source"}</Text>
+                        <Text style={[styles.newsDescription, { color: theme.secondaryText }]}> {item.description}</Text>
                         <Button mode="outlined" onPress={() => speakNews(item.title)} style={styles.speakButton}>🔊 Listen</Button>
                       </Card.Content>
                     </Card>
@@ -187,14 +200,14 @@ export default function App() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: "#6200ee",
+    backgroundColor: "#FF9933",
   },
   refreshButton: {
+    backgroundColor: "#138808",
     marginRight: 10,
   },
   pickerContainer: {
     padding: 10,
-    backgroundColor: "white",
     marginBottom: 10,
   },
   pickerLabel: {
@@ -203,7 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   picker: {
-    height: 60,
+    height: 50,
     width: "100%",
   },
   loader: {
@@ -228,7 +241,6 @@ const styles = StyleSheet.create({
   },
   newsSource: {
     fontSize: 14,
-    color: "gray",
     marginTop: 5,
   },
   newsDescription: {
